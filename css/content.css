@@ -1,0 +1,89 @@
+/*Created by Aran Khanna All Rights Reserved*/
+#image-container{
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+#loading-image{
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 300px;
+  z-index: 100;
+}
+
+#date-tab{
+  background-color: #3C95D2;
+  height: 47px;
+  padding: 1em;
+}
+
+#from,
+#to {
+  padding: 5px 22px 5px 5px;
+  background: #fff url('https://d1v6x81qdeozhc.cloudfront.net/static/assets/search-c8e6cda8cb2d4cf3122d4da0bf317d36.png') no-repeat right 50%;
+  font-size: 13px;
+  width: 200px;
+  border: 1px solid #2169A1;
+  border-bottom: 1px solid #2169A1;
+  margin-right: 1em;
+}
+
+#switcher,
+#select-all,
+#deselect-all{
+  margin-right: 1em;
+}
+
+/* D3 Styling*/
+path.link {
+    fill: none;
+    stroke: #666;
+    /*stroke-width: 1.5px;*/
+}
+path.marker_only {
+    fill: none;
+    stroke-opacity: 1;
+/*    stroke-width: 1.5px;*/
+}
+marker#to {
+    fill: #30cd73;
+}
+path.link.to {
+    stroke: #30cd73;
+    stroke-opacity: 0.5;
+}
+path.link.from {
+    stroke: #e74c3c;
+    stroke-opacity: 0.5;
+}
+
+.peopleCircle {
+  stroke: black;
+  stroke-width: 5px;
+  stroke-opacity: 0;
+}
+
+.peopleCircle:hover {
+  stroke: black;
+  stroke-width: 5px;
+  stroke-opacity: 1;
+}
+/*path.link.from:hover{
+  stroke-opacity: 1;
+}
+path.link.to:hover{
+  stroke-opacity: 1;
+}*/
+text {
+    font: 10px sans-serif;
+    pointer-events: none;
+}
+text.shadow {
+    stroke: #fff;
+    stroke-width: 3px;
+    stroke-opacity: .8;
+}
+ 
