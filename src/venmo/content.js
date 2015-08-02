@@ -1,33 +1,40 @@
 //Created by Aran Khanna All Rights Reserved
 	
 // Global Variables
-	var async_reqs = 0;
+	// Count of requests from background script (mainly for debugging)
+	var background_reqs = 0;
+	// Date range of the data to visualize
 	var to_val = Date.now();
+	var from_val = Date.now();
+	// Is the bubble graph or the chart the currently selected visualization
 	var is_bubble = true;
+	// Is the visualization currently loading data
 	var loading = false;
-// User Data Structures
-	// Dictionary of all transactions from this user's feed.
-	var trans_list = [];
-	var current_range = [];
-// User Data Variables
-	var current_user = null;
+	// The datetime of the oldest transaction stored locally
 	var oldest_retrieved = Date.now();
+	// The URL of the next page of user transactions
 	var next = "";
+	// Whether or not there are more transactions available for this user
 	var moreTransactions = true;
+// Data Structures
+	// List of all transactions pulled from the current user's feed.
+	var trans_list = [];
+// User Data Variables
+	// The JSON for the currently selected user
+	var current_user = null;
 
 // The Logic
-	// On every request from the background script get the rest messages
+	// On the first request from the background script pull the transactions from the url it extracts.
 	chrome.runtime.onMessage.addListener(
 	  	function(request, sender, sendResponse) {
 	  		if(next == ""){
 				getRestMessages(request.url);
-				endpoint = request.url;
 	  		}
 			sendResponse();
 	  	}
 	);
 
-	// When the document is pull cached big pipe data out of it and add the map html
+	// When the document is ready add the toolbar and render the bubble visualization
 	$( document ).ready(function() {
 		// Set up control panel
 		var dateTab = document.createElement('div');
@@ -43,6 +50,8 @@
 		var toDate =  document.createElement('input');
 		toDate.id = 'to';
 		$('#date-tab').append(toDate);
+
+		// set up rerendering on date change
 		$( "#from" ).datepicker({
 			onSelect: function(dateText) {
 				if(!loading){
@@ -86,7 +95,7 @@
 		$('#left_and_right').prepend(bubbleTab);
 	});
 	
-	// Switches DOM assests between graphs
+	// Switches DOM assests' visibility when the visualization changes
 	function switchAssets(){
 		if(is_bubble){
 		    $('#chart-tab *').attr('visibility', 'hidden');
@@ -105,7 +114,7 @@
 		}
 	}
 
-	// Resursively update (with the same result limit as venmo native requests) till we are at the oldDate or there is no more data left
+	// Recursively pull older tranasction data (emulating venmo's native requests) till we are at the oldDate or there is no more data left
 	function updateOldest(oldDate, func, additionalArgs){
 		$.ajax({
 	        type:"GET",
@@ -113,13 +122,14 @@
 	        processData: false,
 	        success: function(json) {
 	        	console.log(json.data);
+	        	var endpoint = next
 	        	if("paging" in json){
 	        		next = json.paging.next;
 	        	}else{
 	        		moreTransactions = false;
 	        	}
 	        	// Parse json string and extract data info for each message
-	        	loadData(json);
+	        	loadData(json, endpoint);
 	        	if(oldDate < oldest_retrieved && moreTransactions){
 	        		updateOldest(oldDate, func, additionalArgs);
 	        	}else{
@@ -139,7 +149,7 @@
 				to_val = date;
 			}
 		}
-		// Automatically render with correct parameters
+		// Automatically render with correct function, parameter values and order
 		var diff = to_val - from_val;
 		var oneDay = 24*60*60*1000; // hours*minutes*seconds*milliseconds
 		if(is_bubble){
@@ -236,8 +246,7 @@
 		$('#image-container').remove();
 
 		// Get Time Range
-		ranges = generateRange(from, to, resolution);
-		current_range = ranges;
+		var current_range = generateRange(from, to, resolution);
 
 		// Load data into chart form
 		var user_dict = {};
@@ -249,13 +258,13 @@
 					name: transaction.name,
 					data: []
 				};
-				for(var i=0; i<ranges.length; i++){
+				for(var i=0; i<current_range.length; i++){
 					user_dict[transaction.id].data.push(0);
 				}
 			}
 			// Add all data in ranges for user
-			for(var i=0; i<ranges.length; i++){
-				if(transaction.created_time >= ranges[i][0].getTime() && transaction.created_time < ranges[i][1].getTime()){
+			for(var i=0; i<current_range.length; i++){
+				if(transaction.created_time >= current_range[i][0].getTime() && transaction.created_time < current_range[i][1].getTime()){
 					user_dict[transaction.id].data[i] += 1;
 					data_providers.push(transaction.id);
 					break;
@@ -270,8 +279,8 @@
 			}
 		}
 		var categories = [];
-		for (var key in ranges) {
-			categories.push(toRangeString(ranges[key], resolution));
+		for (var key in current_range) {
+			categories.push(toRangeString(current_range[key], resolution));
 		}
 
 		// Create chart
@@ -298,7 +307,7 @@
 	        			events: {
 	        				click: function (e){
 	        					// Builds transaction popup box
-	        					var transactions = pullTransactions(this.series.name, this.x, this.y);
+	        					var transactions = pullTransactions(this.series.name, this.x, this.y, current_range);
 	        					if(transactions.length == 0){
 	        						return;
 	        					}
@@ -357,7 +366,7 @@
 		$('#deselect-all').remove();
 		$('#select-all').remove();
 
-		// Set up select all and deselect all buttons
+		// Set up select all and deselect all buttons for chart
 		var deselectAll = document.createElement('button');
  		deselectAll.id = 'deselect-all';
  		$('#date-tab').append(deselectAll);
@@ -382,8 +391,8 @@
 	    });
 	}
 
-	// Pull transactions in range for popup box
-	function pullTransactions(name, range_index, limit){
+	// Pull transactions in the time range for display in the popup box
+	function pullTransactions(name, range_index, limit, current_range){
 		var pulled_transactions = [];
 		var i = 0;
 		while(pulled_transactions.length < limit && i < trans_list.length){
@@ -414,7 +423,7 @@
 	}
 
 	// Loads pulled user data into the transaction list in memory
-	function loadData(json){
+	function loadData(json, endpoint){
 	    $.each(json.data, function(index, transaction){
 	    	// Set current user if not set
 			if(current_user == null){
@@ -456,8 +465,8 @@
 	// Gets and parses json data on user transaction from hitting venmo feed endpoint
 	function getRestMessages(endpoint) {
 		next = endpoint;
-		async_reqs++;
-    	console.log("requesting "+async_reqs);
+		background_reqs++;
+    	console.log("requesting "+background_reqs);
     	$.ajax({
 	        type:"GET",
 	        url: endpoint+"?limit=20",
@@ -470,7 +479,7 @@
 	        		moreTransactions = false;
 	        	}
 	        	// Parse json string and extract data info for each message
-	        	loadData(json);
+	        	loadData(json, endpoint);
 	        	from_val = oldest_retrieved;
 	        	$("#to").datepicker("setDate", new Date(to_val));
 	        	$("#from").datepicker("setDate", new Date(from_val));
@@ -484,24 +493,27 @@
 		if(current_user == null){
 			return;
 		}
+
+		// Load the data needed for the visualization
 		if(from < oldest_retrieved && moreTransactions){
 			loading = true;
 			$('#left_and_right').prepend('<div id="image-container"></div><div id="loading-image"><img src="https://i.imgur.com/0flp5sz.gif" alt="Loading..." />');
 			updateOldest(from, renderBubbleChart, [from, to]);
 			return;
 		}
+		// Remove loading
 		loading = false;
 		$('#loading-image').remove();
 		$('#image-container').remove();
 		$("svg").remove();
 
 		// Create ranges with high resolution
-		ranges = generateRange(from, to, 'd');
-		current_range = ranges;
+		var ranges = generateRange(from, to, 'd');
 
-		// Load data into graph
+		// Load data into graph data structures
 	    var dataset = {nodes: [{name: current_user.name, amt: 1, picture: current_user.picture}], edges: []};
 		$.each(trans_list, function(index, transaction){
+			// Aggregates all user's transactions with the current user in the set time range
 			if(transaction.created_time >= ranges[0][0].getTime() && transaction.created_time < ranges[ranges.length-1][1].getTime()){
 				index = -1;
 				for(var i = 0; i<dataset.nodes.length; i++){
@@ -543,6 +555,7 @@
 			}
 		});	
 		
+		// Aribitary size of canvas and line scaling size
 		var w = 1000,
 	    h = 600;
 	    var lineSizeScale = Math.min(dataset.nodes.length * 30, 400);
