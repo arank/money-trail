@@ -6,7 +6,7 @@ You can get this extension on the Chrome webstore here: https://chrome.google.co
 To install this extension from source simply download it as a zip file and unzip it somewhere on your computer. Go to chrome://extensions, ensure that Developer Mode is enabled and click "Load unpacked extension...". Navigate to the root folder (which contains manifest.json) and select it. For a sligtly more detailed walkthrough look here: https://www.mattcutts.com/blog/how-to-install-a-chrome-extension-from-github/
 
 ##Where did this come from?
-This chrome extension was developed to accompany this Medium post (https://medium.com/@arankhanna/d3676d624310) and this paper (#). It is meant as a demonstration of how much transaction data Venmo defaults users into sharing through its increasingly popular mobile payment app.
+This chrome extension was developed to accompany this Medium post (https://medium.com/@arankhanna/d3676d624310) and this paper (https://chrome.google.com/webstore/detail/money-trail/pfapkinkogbekmajdmmdiificmnkeflm). It is meant as a demonstration of how much transaction data Venmo defaults users into sharing through its increasingly popular mobile payment app.
 
 ##What does this code do?
 A video demonstration of the code is available here: https://youtu.be/R-sNnLUXuNI
