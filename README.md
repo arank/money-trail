@@ -9,7 +9,7 @@ To install this extension from source simply download it as a zip file and unzip
 This chrome extension was developed to accompany this Medium post (https://medium.com/@arankhanna/d3676d624310) and this paper (http://techscience.org/a/2015102801/). It is meant as a demonstration of how much transaction data Venmo defaults users into sharing through its increasingly popular mobile payment app.
 
 ##What does this code do?
-A video demonstration of the code is available here: https://youtu.be/R-sNnLUXuNI
+A video demonstration of the code is available here: https://youtu.be/WBsgZ_jbYaY
 
 This code runs on any user's newsfeed page on https://venmo.com/ (once the extension user is logged into the site). It aggregates all the available transaction data for that user and provide a chart as well as a bubble graph visualization on top of it.
 
